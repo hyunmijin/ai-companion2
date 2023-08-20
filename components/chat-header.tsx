@@ -3,18 +3,24 @@
 import { Companion, Message } from "@prisma/client"
 import {
     ChevronLeft,
+    Edit,
     MessageSquare,
     MoreVertical,
+    Trash,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
 import { Button } from "@/components/ui/button";
 import { BotAvatar } from "@/components/bot-avatar";
-import { 
-    DropdownMenu, 
-    DropdownMenuTrigger 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 
 
 interface ChatHeaderProps {
@@ -31,6 +37,25 @@ export const ChatHeader = ({
 }: ChatHeaderProps) => {
     const router = useRouter();
     const { user } = useUser();
+    const { toast } = useToast();
+
+    const onDelete = async () => {
+        try {
+            await axios.delete(`/api/companion/${companion.id}`);
+
+            toast({
+                description: "Success."
+            });
+
+            router.refresh();
+            router.push("/")
+        } catch (error) {
+            toast({
+                description: "Something went wrong.",
+                variant: "destructive"
+            })
+        }
+    }
 
 
     return (
@@ -57,11 +82,22 @@ export const ChatHeader = ({
             </div>
             {user?.id === companion.userId && (
                 <DropdownMenu>
-                    <DropdownMenuTrigger>
-                        <Button>
-                            <MoreVertical/>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="secondary">
+                            <MoreVertical />
                         </Button>
                     </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/companion/${companion.id}`)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem onClick={onDelete}>
+                            <Trash className="w-4 h-4 mr-2" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
                 </DropdownMenu>
             )}
         </div>
